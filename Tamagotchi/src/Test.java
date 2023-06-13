@@ -1,5 +1,7 @@
 import java.io.Serializable;
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 
@@ -33,7 +35,8 @@ import java.util.Scanner;
 
             long lastTickTime = System.currentTimeMillis();
 
-            while (true) {
+            while (pet.isAlive()) {
+                pet.mood();
                 System.out.println("\nWhat would you like to do?");
                 System.out.println("1. Feed");
                 System.out.println("2. Play");
@@ -74,9 +77,11 @@ import java.util.Scanner;
                         System.out.println("Invalid choice. Please try again.");
                 }
 
+
                 long currentTime = System.currentTimeMillis();
                 long elapsedTime = currentTime - lastTickTime;
 
+                //If the elapsed time is past 10 seconds alter the status of John
                 if (elapsedTime >= 10000) {
                     int elapsedTicks = (int) (elapsedTime / 10000);
                     for (int i = 0; i < elapsedTicks; i++) {
@@ -117,19 +122,31 @@ import java.util.Scanner;
 
     class Tamagotchi implements Serializable {
         private String name;
+        private Map<String, Double> stats = new HashMap<>();
         private int hunger;
         private int boredom;
         private int tiredness;
 
+        private double mood;
+
+
         public Tamagotchi(String name) {
             this.name = name;
+//
+//            stats.put("Hunger", 0.0);
+//            stats.put("Boredom", 0.0);
+//            stats.put("Tiredness", 0.0);
             this.hunger = 0;
             this.boredom = 0;
             this.tiredness = 0;
+            this.mood = 100.0;
         }
+
+
 
         public void feed() {
             hunger--;
+            mood++;
             if (hunger < 0)
                 hunger = 0;
             System.out.println(name + " has been fed.");
@@ -137,6 +154,7 @@ import java.util.Scanner;
 
         public void play() {
             boredom--;
+            mood++;
             if (boredom < 0)
                 boredom = 0;
             System.out.println(name + " has played with you.");
@@ -144,16 +162,123 @@ import java.util.Scanner;
 
         public void sleep() {
             tiredness--;
+            mood++;
             if (tiredness < 0)
                 tiredness = 0;
             System.out.println(name + " has gone to sleep.");
+        }
+
+        public void mood()
+        {
+            if (mood > 100.0)
+            {
+                mood = 100.0;
+            }
+
+            if (mood > 70)
+            {
+                System.out.println("       .=\"=.\n" +
+                        "     _/.-.-.\\_     _\n" +
+                        "    ( ( o o ) )    ))\n" +
+                        "     |/  \"  \\|    //\n" +
+                        "      \\'---'/    //\n" +
+                        "      /`\"\"\"`\\\\  ((\n" +
+                        "     / /_,_\\ \\\\  \\\\\n" +
+                        "     \\_\\\\_'__/ \\  ))\n" +
+                        "     /`  /`~\\  |//\n" +
+                        "    /   /    \\  /\n" +
+                        ",--`,--'\\/\\    /\n" +
+                        " '-- \"--'  '--'");
+            }
+            if(mood <= 70 && mood>= 40)
+            {
+                System.out.println("       .=\"=.\n" +
+                        "     _/.-.-.\\_     _\n" +
+                        "    ( ( o o ) )    ))\n" +
+                        "     |/  \"  \\|    //\n" +
+                        "      \\ --- /    //\n" +
+                        "      /`\"\"\"`\\\\  ((\n" +
+                        "     / /_,_\\ \\\\  \\\\\n" +
+                        "     \\_\\\\_'__/ \\  ))\n" +
+                        "     /`  /`~\\  |//\n" +
+                        "    /   /    \\  /\n" +
+                        ",--`,--'\\/\\    /\n" +
+                        " '-- \"--'  '--'");
+            }
+            if (mood < 40 && mood > 0)
+            {
+                System.out.println("       .=\"=.\n" +
+                        "     _/.-.-.\\_     _\n" +
+                        "    ( ( - - ) )    ))\n" +
+                        "     |/  \"  \\|    //\n" +
+                        "      \\~~~~ /    //\n" +
+                        "      /`\"\"\"`\\\\  ((\n" +
+                        "     / /_,_\\ \\\\  \\\\\n" +
+                        "     \\_\\\\_'__/ \\  ))\n" +
+                        "     /`  /`~\\  |//\n" +
+                        "    /   /    \\  /\n" +
+                        ",--`,--'\\/\\    /\n" +
+                        " '-- \"--'  '--'");
+            }
+            if(mood == 0)
+            {
+                System.out.println("       .=\"=.\n" +
+                        "     _/.-.-.\\_     _\n" +
+                        "    ( ( X X ) )    ))\n" +
+                        "     |/  \"  \\|    //\n" +
+                        "      \\(--u) /    //\n" +
+                        "      /`\"\"\"`\\\\  ((\n" +
+                        "     / /_,_\\ \\\\  \\\\\n" +
+                        "     \\_\\\\_'__/ \\  ))\n" +
+                        "     /`  /`~\\  |//\n" +
+                        "    /   /    \\  /\n" +
+                        ",--`,--'\\/\\    /\n" +
+                        " '-- \"--'  '--'");
+            }
+           for(int i = 0; i < mood + 1; i++)
+           {
+               if(i == 0)
+               {
+                   System.out.print("|");
+               }
+               System.out.print("-|");
+           }
         }
 
         public void update() {
             hunger++;
             boredom++;
             tiredness++;
+            mood = 100.0 - hunger - boredom - tiredness;
             System.out.println(name + " has been updated.");
+        }
+
+        public boolean isAlive()
+        {
+            if (mood <= 0)
+            {
+                    System.out.println("       .=\"=.\n" +
+                            "     _/.-.-.\\_     _\n" +
+                            "    ( ( X X ) )    ))\n" +
+                            "     |/  \"  \\|    //\n" +
+                            "      \\(--u) /    //\n" +
+                            "      /`\"\"\"`\\\\  ((\n" +
+                            "     / /_,_\\ \\\\  \\\\\n" +
+                            "     \\_\\\\_'__/ \\  ))\n" +
+                            "     /`  /`~\\  |//\n" +
+                            "    /   /    \\  /\n" +
+                            ",--`,--'\\/\\    /\n" +
+                            " '-- \"--'  '--'");
+
+                System.out.println(name + "Is dead");
+                System.out.println("Thanks for playing!!!");
+
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
 
         public void printStatus() {
@@ -162,6 +287,7 @@ import java.util.Scanner;
             System.out.println("Boredom: " + boredom);
             System.out.println("Tiredness: " + tiredness);
         }
+
     }
 
     class Save1 implements Serializable {
