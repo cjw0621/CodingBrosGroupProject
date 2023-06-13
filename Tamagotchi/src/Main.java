@@ -1,43 +1,40 @@
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Scanner;
 import java.io.*;
 
-public class Main {
-    private static HashMap<String, Tamagotchi> petSave = new HashMap<>();
+public class Main{
 
-    public static  long currentTime;
-    public static long elapsedTime;
+    public static String petName;
 
-    private static GameTick gt;
-    public static void main(String[] args) {
+    public static Tamagotchi pet;
+    public static long lastTickTime = System.currentTimeMillis();
+    public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Welcome to Tamagotchi!");
 
         System.out.print("Enter your pet's name: ");
-        String petName = scanner.nextLine();
+        petName = scanner.nextLine();
 
-        Tamagotchi pet;
         boolean isNewGame = false;
 
         System.out.println("Do you want to load a previous game? (Y/N)");
         String loadChoice = scanner.nextLine();
 
         if (loadChoice.equalsIgnoreCase("Y")) {
-            MainSave.Save save = MainSave.loadSave();
+            Save save = loadSave();
             pet = save.getPet();
-
-            for (int i = 0; i < gt.getElapsedTicks(); i++) {
+            long lastTickTime = save.getLastTickTime();
+            long elapsedTime = System.currentTimeMillis() - lastTickTime;
+            int elapsedTicks = (int) (elapsedTime / 10000);
+            for (int i = 0; i < elapsedTicks; i++) {
                 pet.update();
             }
-
         } else {
             pet = new Tamagotchi(petName);
-            gt = new GameTick();
             isNewGame = true;
         }
 
-        long lastTickTime = System.currentTimeMillis();
+
 
         while (true) {
             System.out.println("\nWhat would you like to do?");
@@ -56,17 +53,14 @@ public class Main {
                 case 3 -> pet.sleep();
                 case 4 -> pet.printStatus();
                 case 5 -> {
-                    MainSave.saveGame(pet, lastTickTime);
-                    petSave.put(petName, pet);
-
-                    MainSave.writeSavGameToTxt(petSave);
+                    saveGame(pet, lastTickTime);
                     System.out.println("Game saved.");
                 }
                 case 6 -> {
                     if (isNewGame) {
                         System.out.println("Thanks for playing Tamagotchi!");
                     } else {
-                        MainSave.saveGame(pet, lastTickTime);
+                        saveGame(pet, lastTickTime);
                         System.out.println("Game saved. Thanks for playing Tamagotchi!");
                     }
                     System.exit(0);
@@ -74,8 +68,8 @@ public class Main {
                 default -> System.out.println("Invalid choice. Please try again.");
             }
 
-            currentTime = System.currentTimeMillis();
-            elapsedTime = currentTime - lastTickTime;
+            long currentTime = System.currentTimeMillis();
+            long elapsedTime = currentTime - lastTickTime;
 
             if (elapsedTime >= 10000) {
                 int elapsedTicks = (int) (elapsedTime / 10000);
@@ -87,115 +81,104 @@ public class Main {
         }
     }
 
+    private static FileOutputStream fileOut;
 
-    static class Tamagotchi implements Serializable {
-        private String name;
-        private int hunger;
-        private int boredom;
-        private int tiredness;
-
-        private boolean isAlive;
-
-        public void setName(String name) {
-            this.name = name;
+    private static void saveGame(Tamagotchi pet, long lastTickTime) {
+        try {
+            FileOutputStream fileOut = new FileOutputStream("tamagotchi.sav");
+            ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
+            Save save = new Save(pet, lastTickTime);
+            objectOut.writeObject(save);
+            objectOut.close();
+            fileOut.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
 
-        public void setHunger(int hunger) {
-            this.hunger = hunger;
+    private static Save loadSave() throws IOException {
+        Save save = null;
+        File tmpDir = new File("tamagotchi.sav");
+        try {
+            FileInputStream fileIn = new FileInputStream("tamagotchi.sav");
+            ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+            save = (Save) objectIn.readObject();
+            objectIn.close();
+            fileIn.close();
+
+        } catch(IOException | ClassNotFoundException e){
+           
         }
-
-        public void setBoredom(int boredom) {
-            this.boredom = boredom;
-        }
-
-        public void setTiredness(int tiredness) {
-            this.tiredness = tiredness;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public int getHunger() {
-            return hunger;
-        }
-
-        public int getBoredom() {
-            return boredom;
-        }
-
-        public int getTiredness() {
-            return tiredness;
-        }
-
-        public Tamagotchi(String name) {
-            this.name = name;
-            this.hunger = 5;
-            this.boredom = 5;
-            this.tiredness = 5;
-            this.isAlive = true;
-        }
-
-        public void feed() {
-            hunger++;
-            if (hunger < 0 ) {
-                hunger = 0;
-            }
-            System.out.println(name + " has been fed.");
-        }
-
-        public void play() {
-            boredom++;
-            if (boredom < 0)
-                boredom = 0;
-            System.out.println(name + " has played with you.");
-        }
-
-        public void sleep() {
-            tiredness++;
-            if (tiredness < 0)
-                tiredness = 0;
-            System.out.println(name + " has gone to sleep.");
-        }
-
-        public void update() {
-
-            int milliToMin = 60000;
-            hunger--;
-            boredom--;
-            tiredness--;
-            long  currentTime;
-
-            System.out.println(name + " has been updated.");
-            if(hunger <= 0){
-                System.out.println(this.name + " is hungry.");
-
-                currentTime = gt.getLastTickTime();
-
-                if(currentTime - elapsedTime == (milliToMin * 5)){
-
-                    isAlive = false;
-
-                    System.out.println("Your pet had died!");
-
-                    System.out.println("Game Over!");
-                    System.exit(0);
-
-                }
-
-            }
-        }
-
-        public void printStatus() {
-            System.out.println("\n" + name + "'s status:");
-            System.out.println("Hunger: " + hunger);
-            System.out.println("Boredom: " + boredom);
-            System.out.println("Tiredness: " + tiredness);
-        }
+        return save;
     }
 }
 
+class Tamagotchi implements Serializable {
+    private String name;
+    private int hunger;
+    private int boredom;
+    private int tiredness;
 
+    public Tamagotchi(String name) {
+        this.name = name;
+        this.hunger = 0;
+        this.boredom = 0;
+        this.tiredness = 0;
+    }
+
+    public void feed() {
+        hunger--;
+        if (hunger < 0)
+            hunger = 0;
+        System.out.println(name + " has been fed.");
+    }
+
+    public void play() {
+        boredom--;
+        if (boredom < 0)
+            boredom = 0;
+        System.out.println(name + " has played with you.");
+    }
+
+    public void sleep() {
+        tiredness--;
+        if (tiredness < 0)
+            tiredness = 0;
+        System.out.println(name + " has gone to sleep.");
+    }
+
+    public void update() {
+        hunger++;
+        boredom++;
+        tiredness++;
+        System.out.println(name + " has been updated.");
+    }
+
+    public void printStatus() {
+        System.out.println("\n" + name + "'s status:");
+        System.out.println("Hunger: " + hunger);
+        System.out.println("Boredom: " + boredom);
+        System.out.println("Tiredness: " + tiredness);
+    }
+}
+
+class Save implements Serializable {
+    private Tamagotchi pet;
+    private long lastTickTime;
+
+    public Save(Tamagotchi pet, long lastTickTime) {
+        this.pet = pet;
+        this.lastTickTime = lastTickTime;
+    }
+
+    public Tamagotchi getPet() {
+        return pet;
+    }
+
+    public long getLastTickTime() {
+        return lastTickTime;
+    }
+}
 
 
 
