@@ -20,15 +20,16 @@ public class Game {
 
     private final static File PET_SAVE_FILE = new File("tamagotchi.txt");
 
-    private static Tamagotchi pet;
-
     public static void main(String[] args) {
+
+        Tamagotchi pet;
         Scanner scanner = new Scanner(System.in);
         System.out.println("Welcome to Tamagotchi!");
 
         boolean isNewGame = false;
 
         System.out.println("Do you want to load a previous game? (Y/N)");
+
         String loadChoice = scanner.nextLine();
 
         if (loadChoice.equalsIgnoreCase("Y")) {
@@ -96,7 +97,6 @@ public class Game {
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
-
 
             long currentTime = System.currentTimeMillis();
             long elapsedTime = currentTime - lastTickTime;
@@ -185,6 +185,7 @@ public class Game {
 
 
     private static void saveGame(Tamagotchi pet, long lastTickTime) {
+
         try {
             FileOutputStream fileOut = new FileOutputStream("tamagotchi.sav");
             ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
