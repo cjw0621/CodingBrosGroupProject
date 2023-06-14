@@ -19,37 +19,65 @@ public class Game {
     static HashMap<String, List<Integer>> stats = new HashMap<>();
 
     private final static File PET_SAVE_FILE = new File("tamagotchi.txt");
+    private static Tamagotchi pet;
 
     public static void main(String[] args) {
 
-        Tamagotchi pet;
+
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Welcome to Tamagotchi!");
+        System.out.println("*************************\n" + "  Welcome to Tamagotchi!"+
+                "\n"+"*************************\n");
 
         boolean isNewGame = false;
 
         System.out.println("Do you want to load a previous game? (Y/N)");
 
+        System.out.print("> ");
+
         String loadChoice = scanner.nextLine();
 
         if (loadChoice.equalsIgnoreCase("Y")) {
 
-               readPetStatusTxt();
-               Save1 save = loadSave();
-               pet = save.getPet();
-               long lastTickTime = save.getLastTickTime();
-               long elapsedTime = System.currentTimeMillis() - lastTickTime;
+            long lastTickTime = 0;
+            if (PET_SAVE_FILE.exists()) {
+                readPetStatusTxt();
+                Save1 save = loadSave();
+                pet = save.getPet();
+                lastTickTime = save.getLastTickTime();
+                long elapsedTime = System.currentTimeMillis() - lastTickTime;
 
-               //updates the pet status every hour that has been elapsed and not played.
-               int elapsedTicks = (int) (elapsedTime / 3600000);
-               for (int i = 1; i < elapsedTicks; i++) {
-                   pet.update();
-               }
+                //updates the pet status every hour that has been elapsed and not played.
+                int elapsedTicks = (int) (elapsedTime / 3600000);
+                for (int i = 1; i < elapsedTicks; i++) {
+                    pet.update();
+
+                }
+            } else {
+
+                System.out.println("No Save File Found\n\n");
+
+                System.out.print("Enter your pet's name: ");
+                String petName = scanner.nextLine();
+
+                pet = new Tamagotchi(petName);
+
+                isNewGame = true;
+
+                pet.gameData();
+
+                saveGame(pet, lastTickTime);
+
+                writePetStatusTxt(stats);
+
+                System.out.println("Save File Created.");
+
+            }
         } else {
             System.out.print("Enter your pet's name: ");
             String petName = scanner.nextLine();
             pet = new Tamagotchi(petName);
             isNewGame = true;
+            pet.gameData();
         }
 
         long lastTickTime = System.currentTimeMillis();
@@ -108,6 +136,12 @@ public class Game {
                     pet.update();
                 }
                 lastTickTime = currentTime;
+
+
+            }
+
+            if(elapsedTime >= 300000){
+                saveGame(pet, lastTickTime);
             }
         }
     }
